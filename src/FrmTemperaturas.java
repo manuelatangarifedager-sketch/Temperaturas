@@ -1,186 +1,164 @@
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
 import java.util.List;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JToolBar;
-import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
 import javax.swing.WindowConstants;
 
+import controladores.TemperaturaControlador;
 import datechooser.beans.DateChooserCombo;
 import modelos.Temperatura;
 import servicios.TemperaturaServicio;
 
 public class FrmTemperaturas extends JFrame {
 
-    private DateChooserCombo dccFecha, dccDesde, dccHasta;
-    private JTabbedPane tpTemperaturas;
-    private JPanel pnlResultado, pnlGrafica;
+    private DateChooserCombo dccDesde;
+    private DateChooserCombo dccHasta;
+    private DateChooserCombo dccFecha;
 
-    private JTextArea txtResultado;
+    private JPanel pnlGrafica;
+    private JPanel pnlResultado;
 
     private List<Temperatura> datos;
-
-    private DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public FrmTemperaturas() {
 
         setTitle("Temperaturas");
         setSize(700, 400);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-        // 🔹 TOOLBAR
-        JToolBar tb = new JToolBar();
+        JTabbedPane tabs = new JTabbedPane();
 
-        JButton btnGraficar = new JButton("Graficar");
-        btnGraficar.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                btnGraficarClick();
-            }
-        });
-        tb.add(btnGraficar);
+        // PESTAÑA 1: RANGOS
 
-        JButton btnConsultar = new JButton("Consultar");
-        btnConsultar.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                btnConsultarClick();
-            }
-        });
-        tb.add(btnConsultar);
+        JPanel pnlRangos = new JPanel(new BorderLayout());
 
-        // 🔹 CONTENEDOR
-        JPanel pnlTemperaturas = new JPanel();
-        pnlTemperaturas.setLayout(new BoxLayout(pnlTemperaturas, BoxLayout.Y_AXIS));
+        JPanel pnlDatosRango = new JPanel();
+        pnlDatosRango.setPreferredSize(new Dimension(100, 50));
+        pnlDatosRango.setLayout(null);
 
-        // 🔹 PANEL SUPERIOR
-        JPanel pnlDatosProceso = new JPanel();
-        pnlDatosProceso.setPreferredSize(new Dimension(pnlDatosProceso.getWidth(), 50));
-        pnlDatosProceso.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        pnlDatosProceso.setLayout(null);
-
-        // 🔹 DESDE
         JLabel lblDesde = new JLabel("Desde");
         lblDesde.setBounds(10, 10, 60, 25);
-        pnlDatosProceso.add(lblDesde);
+        pnlDatosRango.add(lblDesde);
 
         dccDesde = new DateChooserCombo();
         dccDesde.setBounds(60, 10, 100, 25);
-        dccDesde.setFormat(2);
-        pnlDatosProceso.add(dccDesde);
+        pnlDatosRango.add(dccDesde);
 
-        // 🔹 HASTA
         JLabel lblHasta = new JLabel("Hasta");
         lblHasta.setBounds(170, 10, 60, 25);
-        pnlDatosProceso.add(lblHasta);
+        pnlDatosRango.add(lblHasta);
 
         dccHasta = new DateChooserCombo();
         dccHasta.setBounds(220, 10, 100, 25);
-        dccHasta.setFormat(2);
-        pnlDatosProceso.add(dccHasta);
+        pnlDatosRango.add(dccHasta);
 
-        // 🔹 FECHA
-        JLabel lblFecha = new JLabel("Fecha");
-        lblFecha.setBounds(330, 10, 60, 25);
-        pnlDatosProceso.add(lblFecha);
+        JButton btnGraficar = new JButton("Graficar");
+        btnGraficar.setBounds(340, 10, 100, 25);
+        pnlDatosRango.add(btnGraficar);
 
-        dccFecha = new DateChooserCombo();
-        dccFecha.setBounds(380, 10, 100, 25);
-        dccFecha.setFormat(2);
-        pnlDatosProceso.add(dccFecha);
-
-        // 🔹 PANEL RESULTADO
-        pnlResultado = new JPanel(new BorderLayout());
-        txtResultado = new JTextArea();
-        txtResultado.setEditable(false);
-        pnlResultado.add(new JScrollPane(txtResultado), BorderLayout.CENTER);
-
-        // 🔹 PANEL GRAFICA
         pnlGrafica = new JPanel();
         JScrollPane spGrafica = new JScrollPane(pnlGrafica);
 
-        // 🔹 TABS
-        tpTemperaturas = new JTabbedPane();
-        tpTemperaturas.addTab("Gráfica", spGrafica);
-        tpTemperaturas.addTab("Resultado", pnlResultado);
+        pnlRangos.add(pnlDatosRango, BorderLayout.NORTH);
+        pnlRangos.add(spGrafica, BorderLayout.CENTER);
 
-        // 🔹 AGREGAR
-        pnlTemperaturas.add(pnlDatosProceso);
-        pnlTemperaturas.add(tpTemperaturas);
+        btnGraficar.addActionListener(e -> graficar());
 
-        getContentPane().add(tb, BorderLayout.NORTH);
-        getContentPane().add(pnlTemperaturas, BorderLayout.CENTER);
+
+        // PESTAÑA 2: CONSULTA
+        JPanel pnlConsulta = new JPanel(new BorderLayout());
+
+        JPanel pnlDatosConsulta = new JPanel();
+        pnlDatosConsulta.setPreferredSize(new Dimension(100, 50));
+        pnlDatosConsulta.setLayout(null);
+
+        JLabel lblFecha = new JLabel("Fecha");
+        lblFecha.setBounds(10, 10, 60, 25);
+        pnlDatosConsulta.add(lblFecha);
+
+        dccFecha = new DateChooserCombo();
+        dccFecha.setBounds(60, 10, 120, 25);
+        pnlDatosConsulta.add(dccFecha);
+
+        JButton btnConsultar = new JButton("Consultar");
+        btnConsultar.setBounds(200, 10, 120, 25);
+        pnlDatosConsulta.add(btnConsultar);
+
+        pnlResultado = new JPanel(new BorderLayout());
+
+        pnlConsulta.add(pnlDatosConsulta, BorderLayout.NORTH);
+        pnlConsulta.add(pnlResultado, BorderLayout.CENTER);
+
+        btnConsultar.addActionListener(e -> consultar());
+
+
+        tabs.addTab("Rangos", pnlRangos);
+        tabs.addTab("Consulta", pnlConsulta);
+
+        add(tabs);
 
         cargarDatos();
     }
 
     private void cargarDatos() {
-        String archivo = System.getProperty("user.dir") + "/src/datos/Temperaturas.csv";
+        String archivo = System.getProperty("user.dir")
+                + "/src/datos/Temperaturas.csv";
+
         datos = TemperaturaServicio.getDatos(archivo);
     }
 
-    // 🔥 CONSULTAR (YA FUNCIONA)
-    private void btnConsultarClick() {
-
-        try {
-            LocalDate fecha = LocalDate.parse(dccFecha.getText(), formato);
-
-            Temperatura mayor = null;
-
-            for (Temperatura t : datos) {
-                if (t.getFecha().equals(fecha)) {
-
-                    if (mayor == null || t.getTemperatura() > mayor.getTemperatura()) {
-                        mayor = t;
-                    }
-                }
-            }
-
-            tpTemperaturas.setSelectedIndex(1);
-
-            if (mayor != null) {
-                txtResultado.setText(
-                        "Fecha: " + fecha + "\n\n" +
-                        "Ciudad más calurosa: " + mayor.getCiudad() + "\n" +
-                        "Temperatura: " + mayor.getTemperatura() + " °C"
-                );
-            } else {
-                txtResultado.setText("No hay datos para esa fecha");
-            }
-
-        } catch (Exception e) {
-            txtResultado.setText("Error al leer la fecha");
-        }
+    private LocalDate obtenerFecha(DateChooserCombo dcc) {
+        return dcc.getSelectedDate()
+                .getTime()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
     }
 
-    // 🔥 GRAFICAR (POR AHORA SOLO PRUEBA)
-    private void btnGraficarClick() {
-
+    private void graficar() {
         try {
-            LocalDate desde = LocalDate.parse(dccDesde.getText(), formato);
-            LocalDate hasta = LocalDate.parse(dccHasta.getText(), formato);
+            LocalDate desde = obtenerFecha(dccDesde);
+            LocalDate hasta = obtenerFecha(dccHasta);
 
-            tpTemperaturas.setSelectedIndex(0);
-
-            pnlGrafica.removeAll();
-            pnlGrafica.add(new JLabel("Aquí irá la gráfica entre " + desde + " y " + hasta));
-            pnlGrafica.revalidate();
-            pnlGrafica.repaint();
+            TemperaturaControlador.graficar(
+                    pnlGrafica,
+                    datos,
+                    desde,
+                    hasta
+            );
 
         } catch (Exception e) {
             pnlGrafica.removeAll();
             pnlGrafica.add(new JLabel("Error en fechas"));
             pnlGrafica.revalidate();
             pnlGrafica.repaint();
+        }
+    }
+
+    private void consultar() {
+        try {
+            LocalDate fecha = obtenerFecha(dccFecha);
+
+            TemperaturaControlador.mostrarResultado(
+                    pnlResultado,
+                    datos,
+                    fecha
+            );
+
+        } catch (Exception e) {
+            pnlResultado.removeAll();
+            pnlResultado.add(new JLabel("Error en la fecha"));
+            pnlResultado.revalidate();
+            pnlResultado.repaint();
         }
     }
 }
