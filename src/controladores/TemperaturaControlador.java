@@ -2,6 +2,8 @@ package controladores;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,7 @@ import servicios.TemperaturaServicio;
 
 public class TemperaturaControlador {
 
-    public static void graficar(JPanel panel,
+    public static void graficar(JPanel pnlGrafica,
             List<Temperatura> datos,
             LocalDate desde, LocalDate hasta) {
 
@@ -40,27 +42,40 @@ public class TemperaturaControlador {
         );
 
         ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(500, 300));
+        chartPanel.setPreferredSize(new Dimension(500, 270));
 
-        panel.removeAll();
-        panel.setLayout(new BorderLayout());
-        panel.add(chartPanel, BorderLayout.CENTER);
-        panel.revalidate();
+        pnlGrafica.removeAll();
+        pnlGrafica.setLayout(new BorderLayout());
+        pnlGrafica.add(chartPanel, BorderLayout.CENTER);
+        pnlGrafica.revalidate();
     }
 
-    
-    public static void mostrarResultado(JPanel panel,
+    public static void mostrarResultado(JPanel pnlResultado,
             List<Temperatura> datos,
             LocalDate fecha) {
 
-        String max = TemperaturaServicio.getCiudadMasCalurosa(datos, fecha);
-        String min = TemperaturaServicio.getCiudadMenosCalurosa(datos, fecha);
+        String max = TemperaturaServicio.getCiudadMax(datos, fecha);
+        String min = TemperaturaServicio.getCiudadMin(datos, fecha);
 
-        panel.removeAll();
+        pnlResultado.removeAll();
+        pnlResultado.setLayout(new GridBagLayout());
 
-        panel.add(new JLabel("Más calurosa: " + max));
-        panel.add(new JLabel("Menos calurosa: " + min));
+        var gbc = new GridBagConstraints();
 
-        panel.revalidate();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        pnlResultado.add(new JLabel("Ciudad más calurosa:"), gbc);
+
+        gbc.gridx = 1;
+        pnlResultado.add(new JLabel(max), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        pnlResultado.add(new JLabel("Ciudad menos calurosa:"), gbc);
+
+        gbc.gridx = 1;
+        pnlResultado.add(new JLabel(min), gbc);
+
+        pnlResultado.revalidate();
     }
 }

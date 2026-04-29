@@ -12,29 +12,23 @@ import modelos.Temperatura;
 public class TemperaturaServicio {
 
     public static List<Temperatura> getDatos(String archivo) {
+
         DateTimeFormatter formato = DateTimeFormatter.ofPattern("d/M/yyyy");
 
         try {
             return Files.lines(Paths.get(archivo))
                     .skip(1)
-                    .map(linea -> linea.split(","))
+                    .map(l -> l.split(","))
                     .map(t -> new Temperatura(
                             t[0],
                             LocalDate.parse(t[1], formato),
-                            Double.parseDouble(t[2])))
+                            Double.parseDouble(t[2])
+                    ))
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
             return Collections.emptyList();
         }
-    }
-
-    public static List<String> getCiudades(List<Temperatura> datos) {
-        return datos.stream()
-                .map(Temperatura::getCiudad)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
     }
 
     public static List<Temperatura> filtrar(List<Temperatura> datos,
@@ -46,7 +40,6 @@ public class TemperaturaServicio {
                 .collect(Collectors.toList());
     }
 
-    // 🔥 PROMEDIO POR CIUDAD
     public static Map<String, Double> getPromedioPorCiudad(List<Temperatura> datos) {
 
         return datos.stream()
@@ -56,8 +49,7 @@ public class TemperaturaServicio {
                 ));
     }
 
-
-    public static String getCiudadMasCalurosa(List<Temperatura> datos, LocalDate fecha) {
+    public static String getCiudadMax(List<Temperatura> datos, LocalDate fecha) {
 
         return datos.stream()
                 .filter(d -> d.getFecha().equals(fecha))
@@ -66,8 +58,7 @@ public class TemperaturaServicio {
                 .orElse("N/A");
     }
 
-
-    public static String getCiudadMenosCalurosa(List<Temperatura> datos, LocalDate fecha) {
+    public static String getCiudadMin(List<Temperatura> datos, LocalDate fecha) {
 
         return datos.stream()
                 .filter(d -> d.getFecha().equals(fecha))
